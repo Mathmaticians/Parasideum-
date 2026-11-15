@@ -89,6 +89,13 @@ std::uint8_t ownershipFlags(World& world, Entity e, Entity viewer,
         player = instance->owner;
     } else if (const Pet* pet = world.tryGet<Pet>(e)) {
         player = pet->owner;
+    } else if (const GroundEffect* field = world.tryGet<GroundEffect>(e)) {
+        if (field->kind != GroundEffectKind::Poison) return 0;
+        player = field->owner;
+        // A puff outlives the flower that shed it, and a flower that has left
+        // can no longer be matched to a connection, so there is no telling
+        // whose it was: leave it showing rather than hide the viewer's own.
+        if (player != viewer && world.tryGet<PlayerAccount>(player) == nullptr) return 0;
     } else if (const Projectile* shot = world.tryGet<Projectile>(e)) {
         const Faction* side = world.tryGet<Faction>(e);
         if (side == nullptr || side->team != Team::Players) return 0;
